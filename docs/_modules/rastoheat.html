@@ -104,21 +104,125 @@
           <div role="main" class="document">
             
   <h1>Source code for rastoheat</h1><div class="highlight"><pre>
-<span class="kn">import</span> <span class="nn">gdal</span>
+<span class="kn">from</span> <span class="nn">osgeo</span> <span class="kn">import</span> <span class="n">gdal</span><span class="p">,</span> <span class="n">ogr</span><span class="p">,</span> <span class="n">osr</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">os</span>
 
 <div class="viewcode-block" id="ras2heat"><a class="viewcode-back" href="../code.html#rastoheat.ras2heat">[docs]</a><span class="k">def</span> <span class="nf">ras2heat</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">outdir</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Displays data from an input raster as an interactive web map by converting it to a heatmap and displaying with the Google Maps API</span>
 
-<span class="sd">    :param raster: input raster</span>
+<span class="sd">    :param raster: path to input raster</span>
 <span class="sd">    :param outdir: directory to write webpage outputs</span>
 
 <span class="sd">    :return: 0 on fail, 1 on success</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">success</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">return</span> <span class="n">success</span></div>
+    <span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">setupOutdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+    <span class="n">ras2js</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">outdir</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">success</span>
+</div>
+<div class="viewcode-block" id="setupOutdir"><a class="viewcode-back" href="../code.html#rastoheat.setupOutdir">[docs]</a><span class="k">def</span> <span class="nf">setupOutdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Setup file structure in output directory</span>
+
+<span class="sd">    :param outdir: path to output directory</span>
+
+<span class="sd">    :return: None</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets/css&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets/css&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets/js&quot;</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets/js&quot;</span><span class="p">)</span>
+    <span class="c"># if not os.path.exists(outdir + &quot;/webmap/assets/data&quot;):</span>
+    <span class="c">#     os.mkdir(outdir + &quot;/webmap/assets/data&quot;)</span>
+</div>
+<div class="viewcode-block" id="ras2js"><a class="viewcode-back" href="../code.html#rastoheat.ras2js">[docs]</a><span class="k">def</span> <span class="nf">ras2js</span><span class="p">(</span><span class="n">raster</span><span class="p">,</span> <span class="n">outdir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts raster cells containing data to geojson which is used to create a heatmap.</span>
+<span class="sd">    :param raster:</span>
+<span class="sd">    :param outdir:</span>
+
+<span class="sd">    :return: 0 on fail, 1 on success.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">success</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">gdal</span><span class="o">.</span><span class="n">Open</span><span class="p">(</span><span class="n">raster</span><span class="p">)</span>
+    <span class="n">array</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">ReadAsArray</span><span class="p">()</span>
+    <span class="n">nodata</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetRasterBand</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">GetNoDataValue</span><span class="p">()</span>
+    <span class="n">srs</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">SpatialReference</span><span class="p">()</span>
+    <span class="n">srs</span><span class="o">.</span><span class="n">ImportFromWkt</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">GetProjection</span><span class="p">())</span>
+    <span class="n">geot</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">GetGeoTransform</span><span class="p">()</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">getCoordinateTransformation</span><span class="p">(</span><span class="n">srs</span><span class="p">)</span>
+    <span class="n">addresses</span> <span class="o">=</span> <span class="n">getDataAddresses</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">nodata</span><span class="p">)</span>
+    <span class="n">json</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">outdir</span> <span class="o">+</span> <span class="s">&quot;/webmap/assets/data/raster.geojson&quot;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="c">#create geojson file</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;eqfeed_callback({</span><span class="se">\&quot;</span><span class="s">type</span><span class="se">\&quot;</span><span class="s">:</span><span class="se">\&quot;</span><span class="s">FeatureCollection</span><span class="se">\&quot;</span><span class="s">,</span><span class="se">\n</span><span class="s"> </span><span class="se">\&quot;</span><span class="s">features</span><span class="se">\&quot;</span><span class="s">: [</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span> <span class="c">#write first line</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">address</span> <span class="ow">in</span> <span class="n">addresses</span><span class="p">:</span>
+        <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">coords</span> <span class="o">=</span> <span class="n">getCoordinatesOfCellAddress</span><span class="p">(</span><span class="n">address</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">address</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">geot</span><span class="p">)</span> <span class="c">#get coordinates of cell addresses</span>
+        <span class="n">point</span> <span class="o">=</span> <span class="n">ogr</span><span class="o">.</span><span class="n">CreateGeometryFromWkt</span><span class="p">(</span><span class="s">&quot;POINT (&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;)&quot;</span><span class="p">)</span> <span class="c">#create OGR point</span>
+        <span class="n">point</span><span class="o">.</span><span class="n">Transform</span><span class="p">(</span><span class="n">transform</span><span class="p">)</span> <span class="c">#transform from raster coordinate system to WGS84</span>
+        <span class="n">json</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;{</span><span class="se">\&quot;</span><span class="s">type</span><span class="se">\&quot;</span><span class="s">: </span><span class="se">\&quot;</span><span class="s">Feature</span><span class="se">\&quot;</span><span class="s">, </span><span class="se">\&quot;</span><span class="s">geometry</span><span class="se">\&quot;</span><span class="s">: {</span><span class="se">\&quot;</span><span class="s">type</span><span class="se">\&quot;</span><span class="s">: </span><span class="se">\&quot;</span><span class="s">Point</span><span class="se">\&quot;</span><span class="s">, </span><span class="se">\&quot;</span><span class="s">coordinates</span><span class="se">\&quot;</span><span class="s">: [&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">GetX</span><span class="p">())</span>
+                   <span class="o">+</span> <span class="s">&quot; &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">point</span><span class="o">.</span><span class="n">GetY</span><span class="p">())</span> <span class="o">+</span> <span class="s">&quot;]}, </span><span class="se">\&quot;</span><span class="s">properties</span><span class="se">\&quot;</span><span class="s">: {</span><span class="se">\&quot;</span><span class="s">value</span><span class="se">\&quot;</span><span class="s">: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">array</span><span class="p">[</span><span class="n">address</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">address</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                   <span class="o">+</span> <span class="s">&quot;}}&quot;</span><span class="p">)</span> <span class="c">#write json feature data</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">addresses</span><span class="p">):</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;,</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span> <span class="c">#do not print comma for last item</span>
+
+    <span class="n">json</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&quot;]});&quot;</span><span class="p">)</span> <span class="c">#close of function, feature, collection, and features</span>
+    <span class="n">json</span><span class="o">.</span><span class="n">close</span><span class="p">()</span> <span class="c">#close file</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="k">return</span> <span class="n">success</span>
+</div>
+<div class="viewcode-block" id="getDataAddresses"><a class="viewcode-back" href="../code.html#rastoheat.getDataAddresses">[docs]</a><span class="k">def</span> <span class="nf">getDataAddresses</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">nodata</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get addresses of cells containing data</span>
+
+<span class="sd">    :param array: numpy array of raster data.</span>
+<span class="sd">    :param nodata: NoData value.</span>
+
+<span class="sd">    :return: numpy array (n row, 2 column) of cell addresses.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">array</span> <span class="o">&lt;&gt;</span> <span class="n">nodata</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="getCoordinatesOfCellAddress"><a class="viewcode-back" href="../code.html#rastoheat.getCoordinatesOfCellAddress">[docs]</a><span class="k">def</span> <span class="nf">getCoordinatesOfCellAddress</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">,</span> <span class="n">geot</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the coordinate pair at the center of a cell address based on the input DEM. UTM projections suggested, will not work with degree units.</span>
+
+<span class="sd">    :param row: Row index of the raster.</span>
+<span class="sd">    :param col: Column index of the raster.</span>
+<span class="sd">    :param geot: GDAL geotransform for the raster.</span>
+
+<span class="sd">    :return: numpy array with x and y coordinates (array[x, y]).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">geot</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">col</span> <span class="o">*</span> <span class="n">geot</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">geot</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">geot</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">row</span> <span class="o">*</span> <span class="n">geot</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">geot</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">coords</span>
+</div>
+<div class="viewcode-block" id="getCoordinateTransformation"><a class="viewcode-back" href="../code.html#rastoheat.getCoordinateTransformation">[docs]</a><span class="k">def</span> <span class="nf">getCoordinateTransformation</span><span class="p">(</span><span class="n">srs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get object to transform coordinates from raster coordinate system to WGS84.</span>
+
+<span class="sd">    :param srs: Coordinate system of raster.</span>
+
+<span class="sd">    :return: Coordinate transformation object.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">srstarget</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">SpatialReference</span><span class="p">()</span>
+    <span class="n">srstarget</span><span class="o">.</span><span class="n">SetWellKnownGeogCS</span><span class="p">(</span><span class="s">&quot;WGS84&quot;</span><span class="p">)</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">osr</span><span class="o">.</span><span class="n">CoordinateTransformation</span><span class="p">(</span><span class="n">srs</span><span class="p">,</span> <span class="n">srstarget</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">transform</span></div>
 </pre></div>
 
           </div>

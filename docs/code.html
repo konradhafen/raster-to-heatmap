@@ -106,6 +106,65 @@
   <div class="section" id="module-rastoheat">
 <span id="code-description"></span><h1>Code description<a class="headerlink" href="#module-rastoheat" title="Permalink to this headline">¶</a></h1>
 <dl class="function">
+<dt id="rastoheat.getCoordinateTransformation">
+<code class="descclassname">rastoheat.</code><code class="descname">getCoordinateTransformation</code><span class="sig-paren">(</span><em>srs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rastoheat.html#getCoordinateTransformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rastoheat.getCoordinateTransformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get object to transform coordinates from raster coordinate system to WGS84.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>srs</strong> &#8211; Coordinate system of raster.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Coordinate transformation object.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rastoheat.getCoordinatesOfCellAddress">
+<code class="descclassname">rastoheat.</code><code class="descname">getCoordinatesOfCellAddress</code><span class="sig-paren">(</span><em>row</em>, <em>col</em>, <em>geot</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rastoheat.html#getCoordinatesOfCellAddress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rastoheat.getCoordinatesOfCellAddress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the coordinate pair at the center of a cell address based on the input DEM. UTM projections suggested, will not work with degree units.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>row</strong> &#8211; Row index of the raster.</li>
+<li><strong>col</strong> &#8211; Column index of the raster.</li>
+<li><strong>geot</strong> &#8211; GDAL geotransform for the raster.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">numpy array with x and y coordinates (array[x, y]).</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rastoheat.getDataAddresses">
+<code class="descclassname">rastoheat.</code><code class="descname">getDataAddresses</code><span class="sig-paren">(</span><em>array</em>, <em>nodata</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rastoheat.html#getDataAddresses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rastoheat.getDataAddresses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get addresses of cells containing data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>array</strong> &#8211; numpy array of raster data.</li>
+<li><strong>nodata</strong> &#8211; NoData value.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">numpy array (n row, 2 column) of cell addresses.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
 <dt id="rastoheat.ras2heat">
 <code class="descclassname">rastoheat.</code><code class="descname">ras2heat</code><span class="sig-paren">(</span><em>raster</em>, <em>outdir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rastoheat.html#ras2heat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rastoheat.ras2heat" title="Permalink to this definition">¶</a></dt>
 <dd><p>Displays data from an input raster as an interactive web map by converting it to a heatmap and displaying with the Google Maps API</p>
@@ -114,13 +173,45 @@
 <col class="field-body" />
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>raster</strong> &#8211; input raster</li>
+<li><strong>raster</strong> &#8211; path to input raster</li>
 <li><strong>outdir</strong> &#8211; directory to write webpage outputs</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">0 on fail, 1 on success</p>
 </td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rastoheat.ras2js">
+<code class="descclassname">rastoheat.</code><code class="descname">ras2js</code><span class="sig-paren">(</span><em>raster</em>, <em>outdir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rastoheat.html#ras2js"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rastoheat.ras2js" title="Permalink to this definition">¶</a></dt>
+<dd><p>Converts raster cells containing data to geojson which is used to create a heatmap.
+:param raster:
+:param outdir:</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">0 on fail, 1 on success.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="rastoheat.setupOutdir">
+<code class="descclassname">rastoheat.</code><code class="descname">setupOutdir</code><span class="sig-paren">(</span><em>outdir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/rastoheat.html#setupOutdir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#rastoheat.setupOutdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setup file structure in output directory</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>outdir</strong> &#8211; path to output directory</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">None</td>
 </tr>
 </tbody>
 </table>

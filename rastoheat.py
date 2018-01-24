@@ -57,7 +57,7 @@ def ras2js(raster, outdir):
     geot = ds.GetGeoTransform()
     transform = getCoordinateTransformation(srs)
     addresses = getDataAddresses(array, nodata)
-    json = open(outdir + "/webmap/assets/data/raster.geojson", 'w') #create geojson file
+    json = open(outdir + "/webmap/assets/js/raster.geojson", 'w') #create geojson file
     json.write("eqfeed_callback({\"type\":\"FeatureCollection\",\n \"features\": [\n") #write first line
 
     count = 0
